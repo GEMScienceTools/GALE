@@ -185,16 +185,20 @@ def calculate_distance_2points(point1,point2):
 
 	distance = 6367*2*math.asin(math.sqrt(a)) 
 	return distance
-    
-def amplify_ground_shaking(T,Vs30,IMLs):
 
-    ampFactorsShort = [(760/Vs30)**0.35,(760/Vs30)**0.35,(760/Vs30)**0.25,(760/Vs30)**0.10,(760/Vs30)**-0.05,(760/Vs30)**-0.05]
-    ampFactorsMid = [(760/Vs30)**0.65,(760/Vs30)**0.65,(760/Vs30)**0.60,(760/Vs30)**0.53,(760/Vs30)**0.45,(760/Vs30)**0.45]
+
+def amplify_ground_shaking(T,Vs30,IMLs):
+    ampFactorsShort = [(760/Vs30)**0.35,(760/Vs30)**0.35,(760/Vs30)**0.25,
+                       (760/Vs30)**0.10,(760/Vs30)**-0.05,(760/Vs30)**-0.05]
+    ampFactorsMid = [(760/Vs30)**0.65,(760/Vs30)**0.65,(760/Vs30)**0.60,
+                     (760/Vs30)**0.53,(760/Vs30)**0.45,(760/Vs30)**0.45]
 
     if T<=0.3:
-		interpolator = interpolate.interp1d([-1,0.1,0.2,0.3,0.4,100],ampFactorsShort, kind = 'linear')
+            interpolator = interpolate.interp1d(
+                    [-1,0.1,0.2,0.3,0.4,100],
+                    ampFactorsShort, kind = 'linear')
     if T>0.3:
-		interpolator = interpolate.interp1d([-1,0.1,0.2,0.3,0.4,100],ampFactorsMid, kind = 'linear')
-    
+	    interpolator = interpolate.interp1d(
+                    [-1,0.1,0.2,0.3,0.4,100],ampFactorsMid, kind = 'linear')
+
     return interpolator(IMLs)*IMLs
-        

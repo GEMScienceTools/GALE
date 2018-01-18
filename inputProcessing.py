@@ -1,31 +1,29 @@
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
-import urllib2  # the lib that handles the url stuff
+from urllib.request import urlopen
 import math
 import numpy
 import scipy
-import time
 import zipfile
 import urllib
 import os
 
+
 def save_online_data_to_xml(eventID):
-	
-	try:    
+	try:
 		groundShakingURL = 'http://shakemap.rm.ingv.it/shake/'+str(eventID)+'/download/grid.xml'
-		groundShakingData = urllib2.urlopen(groundShakingURL) 
+		groundShakingData = urlopen(groundShakingURL) 
 		write_xml(groundShakingData,'groundShaking'+str(eventID))
 	except:
 		groundShakingURL = 'http://shakemap.rm.ingv.it/shake/'+str(eventID)+'/download/grid.xml.zip'
-		groundShakingData = urllib2.urlopen(groundShakingURL) 
+		groundShakingData = urlopen(groundShakingURL) 
 		output = open('groundShaking'+str(eventID)+'.zip', "w")
 		output.write(groundShakingData.read())
 		output.close() 
         
 	try:
 		uncertaintyURL = 'http://shakemap.rm.ingv.it/shake/'+str(eventID)+'/download/uncertainty.xml'
-		uncertaintyData = urllib2.urlopen(uncertaintyURL)         
+		uncertaintyData = urlopen(uncertaintyURL)         
 		testfile = urllib.URLopener()
 		testfile.retrieve(uncertaintyURL, "temp.zip")
 		zip_ref = zipfile.ZipFile("temp.zip", 'r')
@@ -35,7 +33,7 @@ def save_online_data_to_xml(eventID):
         
 	except:
 		uncertaintyURL = 'http://shakemap.rm.ingv.it/shake/'+str(eventID)+'/download/uncertainty.xml.zip'
-		uncertaintyData = urllib2.urlopen(uncertaintyURL)         
+		uncertaintyData = urlopen(uncertaintyURL)         
 		testfile = urllib.URLopener()
 		testfile.retrieve(uncertaintyURL, "temp.zip")
 		zip_ref = zipfile.ZipFile("temp.zip", 'r')
@@ -75,8 +73,8 @@ def cropShakingData(groundShakingData,typeCrop,limit):
                 groundShakingData = numpy.delete(groundShakingData, iloc, 0)
                 
     
-    print 'Total number of locations after cropping'
-    print len(groundShakingData)
+    print('Total number of locations after cropping')
+    print(len(groundShakingData))
     
     return groundShakingData
     
@@ -84,7 +82,7 @@ def reduceShakingData(groundShakingData,box,res):
 
     groundShakingData = numpy.array(groundShakingData)
     lon = numpy.linspace(box[0],box[1],(box[1]-box[0])/res)
-    print lon
+    print(lon)
     lat = numpy.linspace(box[2],box[3],(box[3]-box[2])/res)
     reducedGroundShaking = numpy.zeros((int(len(lat)*len(lon)),len(groundShakingData[0])))
 
@@ -96,8 +94,8 @@ def reduceShakingData(groundShakingData,box,res):
             reducedGroundShaking[counter][2:] = findClosestData(lon[ilon],lat[ilat],groundShakingData)
             counter = counter + 1
     
-    print 'Total number of locations after re-distribution'
-    print len(reducedGroundShaking)
+    print('Total number of locations after re-distribution')
+    print(len(reducedGroundShaking))
     
     return reducedGroundShaking
     
@@ -182,10 +180,10 @@ def parse_xml_data_files(groundShakingFile,uncertaintyFile):
                     data.append([lon,lat,mPGA,sPGA,Vs30])
     file.close
     
-    print 'Total number of locations with ground shaking:'
-    print len(data)
-    print 'The following IMTs were found:'
-    print IMTs
+    print('Total number of locations with ground shaking:')
+    print(len(data))
+    print('The following IMTs were found:')
+    print(IMTs)
 	
     return data, IMTs
 	
