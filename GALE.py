@@ -1,10 +1,6 @@
-import math
-import numpy
-import scipy
 import inputProcessing
 import groundShakingCalculation
 import outputProcessing
-import time
 
 eventID = 1
 
@@ -38,13 +34,15 @@ distanceMatrix = groundShakingCalculation.calculate_distance_matrix(locations)
 print(distanceMatrix)
 
 print('CALCULATING SPATIAL CORRELATION MATRIX...')
-spatialCorrMatrices = groundShakingCalculation.calculate_spatial_correlation_matrices(
-    distanceMatrix, IMTs, 'spatial')
+spatialCorrMatrices = groundShakingCalculation.\
+                      calculate_spatial_correlation_matrices(
+                          distanceMatrix, IMTs, 'spatial')
 print(spatialCorrMatrices)
 
 print('CALCULATING SPATIAL COVARIANCE MATRIX...')
-spatialCovMatrices = groundShakingCalculation.calculate_spatial_covariance_matrices(
-    closestGroundShaking, spatialCorrMatrices)
+spatialCovMatrices = groundShakingCalculation.\
+                     calculate_spatial_covariance_matrices(
+                         closestGroundShaking, spatialCorrMatrices)
 print(spatialCovMatrices)
 
 print('CALCULATING CROSS-CORRELATION MATRIX...')
@@ -52,7 +50,7 @@ crossCorrMatrix = groundShakingCalculation.calculate_cross_correlation_matrix(
     IMTs, 'cross')
 print(crossCorrMatrix)
 
-#print('GENERATING SPATIALLY-CROSS-CORRELATED RANDOM FIEDS OF GROUND MOTION...')
+print('GENERATING SPATIALLY-CROSS-CORRELATED RANDOM FIEDS OF GROUND MOTION...')
 gmfs = groundShakingCalculation.generate_random_fields_ground_motion(
     closestGroundShaking, spatialCovMatrices, crossCorrMatrix, 2000)
 #print('SAVING GROUND MOTION FIELDS IN NRML FORMAT..')

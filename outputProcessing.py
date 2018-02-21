@@ -46,12 +46,16 @@ def save_gmfs_to_xml(eventID, IMTs, exposureLocations, gmfs):
                     xml.write('                 saDamping="5.0"\n')
                     xml.write('                 saPeriod="' + str(T) + '"\n')
                 xml.write(
-                    '                     ruptureId="scenario-' + str(j) + '"\n')
+                    '                     ruptureId="scenario-' +
+                    str(j) + '"\n')
                 xml.write('                     >\n')
 
                 for iloc in range(noLocations):
-                    xml.write('                         <node gmv="' + str(gmfs[i * noLocations + iloc][j]) + '" lat="' + str(
-                        exposureLocations[iloc][1]) + '" lon="' + str(exposureLocations[iloc][0]) + '"/>\n')
+                    xml.write('                         <node gmv="' +
+                              str(gmfs[i * noLocations + iloc][j]) +
+                              '" lat="' + str(
+                                  exposureLocations[iloc][1]) + '" lon="' +
+                              str(exposureLocations[iloc][0]) + '"/>\n')
                 xml.write('                     </gmf>\n')
     xml.write('         </gmfSet>\n')
     xml.write(' </gmfCollection>\n')
@@ -60,7 +64,6 @@ def save_gmfs_to_xml(eventID, IMTs, exposureLocations, gmfs):
 
 
 def calculate_percentiles_gmfs(percentiles, IMTs, exposureLocations, gmfs):
-
     noLocations = int(len(gmfs) / len(IMTs))
     perGMFs = np.zeros((noLocations * len(IMTs), 1))
 
@@ -74,7 +77,6 @@ def calculate_percentiles_gmfs(percentiles, IMTs, exposureLocations, gmfs):
 
 
 def save_gmfs_to_csv(eventID, exposureLocations, gmfs):
-
     out_PGA = open(str(eventID) + '_PGA.csv', "w")
     out_Sa03 = open(str(eventID) + '_Sa03.csv', "w")
     out_Sa10 = open(str(eventID) + '_Sa10.csv', "w")
@@ -91,11 +93,14 @@ def save_gmfs_to_csv(eventID, exposureLocations, gmfs):
         out_PGA.write(str(exposureLocations[iloc][0]) + ',' + str(
             exposureLocations[iloc][1]) + buildRow(gmfs[iloc]) + '\n')
         out_Sa03.write(str(exposureLocations[iloc][0]) + ',' + str(
-            exposureLocations[iloc][1]) + buildRow(gmfs[iloc + noLocations]) + '\n')
+            exposureLocations[iloc][1]) + buildRow(
+                gmfs[iloc + noLocations]) + '\n')
         out_Sa10.write(str(exposureLocations[iloc][0]) + ',' + str(
-            exposureLocations[iloc][1]) + buildRow(gmfs[iloc + 2 * noLocations]) + '\n')
+            exposureLocations[iloc][1]) + buildRow(
+                gmfs[iloc + 2 * noLocations]) + '\n')
         out_Sa30.write(str(exposureLocations[iloc][0]) + ',' + str(
-            exposureLocations[iloc][1]) + buildRow(gmfs[iloc + 3 * noLocations]) + '\n')
+            exposureLocations[iloc][1]) + buildRow(
+                gmfs[iloc + 3 * noLocations]) + '\n')
 
     out_PGA.close()
     out_Sa03.close()
@@ -104,7 +109,6 @@ def save_gmfs_to_csv(eventID, exposureLocations, gmfs):
 
 
 def buildHeader(noValues):
-
     row = 'lon,lat'
     for value in range(noValues):
         row = row + ',gmf' + str(value)
@@ -113,7 +117,6 @@ def buildHeader(noValues):
 
 
 def buildRow(gmvs):
-
     row = ''
     for gmv in gmvs:
         row = row + ',' + str(gmv)
@@ -122,7 +125,6 @@ def buildRow(gmvs):
 
 
 def parse_nrml_gmf(gmfFile):
-
     IMTs = []
     locations = []
     gmvs = []
@@ -149,8 +151,8 @@ def parse_nrml_gmf(gmfFile):
                 locations.append([float(line[5]), float(line[3])])
                 gmvs.append(float(line[1]))
                 counter = counter + 1
-                line = lines[firstLine +
-                             counter].strip('\n').strip(' ').strip('\t').split('"')
+                line = (lines[firstLine + counter].
+                        strip('\n').strip(' ').strip('\t').split('"'))
 
     uniqueIMT = []
     uniquelocations = []
@@ -179,15 +181,12 @@ def parse_nrml_gmf(gmfFile):
 
 
 def extract_percentile_gmf_xml(gmfFile, percentiles):
-
     IMTs, exposureLocations, gmfs = parse_nrml_gmf(gmfFile)
     calculate_percentiles_gmfs(percentiles, IMTs, exposureLocations, gmfs)
 
 
 def save_data_to_csv(data, filename):
-
     out_file = open(filename, "w")
-
     for igmv in range(len(data)):
         row = buildRow(data[igmv])
         out_file.write(row[1:] + '\n')
@@ -195,10 +194,10 @@ def save_data_to_csv(data, filename):
 
 
 def save_mean_std_to_csv(data, filename):
-
     out_file = open(filename, "w")
     out_file.write(
-        'lon,lat,mpga,msa03,msa10,msa30,spga,ssa03,ssa10,ssa30,cpga,csa03,csa10,csa30\n')
+        'lon,lat,mpga,msa03,msa10,msa30,spga,ssa03,ssa10,ssa30,'
+        'cpga,csa03,csa10,csa30\n')
 
     for igmv in range(len(data)):
         singleLoc = data[igmv]
@@ -211,13 +210,17 @@ def save_mean_std_to_csv(data, filename):
         cSa10 = sSa10 / mSa10
         cSa30 = sSa30 / mSa30
 
-        out_file.write(str(singleLoc[0]) + ',' + str(singleLoc[1]) + ',' + str(mPGA) + ',' + str(mSa03) + ',' + str(mSa10) + ',' + str(mSa30) + ',' + str(
-            sPGA) + ',' + str(sSa03) + ',' + str(sSa10) + ',' + str(sSa30) + ',' + str(cPGA) + ',' + str(cSa03) + ',' + str(cSa10) + ',' + str(cSa30) + '\n')
+        out_file.write(str(singleLoc[0]) + ',' + str(singleLoc[1])
+                       + ',' + str(mPGA) + ',' + str(mSa03) + ','
+                       + str(mSa10) + ',' + str(mSa30) + ','
+                       + str(sPGA) + ',' + str(sSa03) + ',' + str(sSa10)
+                       + ',' + str(sSa30) + ',' + str(cPGA) + ','
+                       + str(cSa03) + ',' + str(cSa10) + ',' + str(cSa30)
+                       + '\n')
     out_file.close()
 
 
 def calculate_m_std(mu, sigma):
-
     m = math.exp(mu + sigma**2 / 2)
     std = math.sqrt(math.exp(2 * mu + sigma**2) * (math.exp(sigma**2) - 1))
 

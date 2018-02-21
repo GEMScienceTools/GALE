@@ -1,25 +1,23 @@
 import math
 import numpy as np
-import time
 from scipy.stats import truncnorm
 from scipy import interpolate
 
 
 def calculate_distance_matrix(exposureLocations):
-
     noLocations = len(exposureLocations)
     distanceMatrix = np.zeros((noLocations, noLocations))
 
     for i in range(noLocations):
         for j in range(noLocations):
-            distanceMatrix[i][j] = calculate_distance_2points(
+            distanceMatrix[i, j] = calculate_distance_2points(
                 exposureLocations[i], exposureLocations[j])
 
     return distanceMatrix
 
 
-def calculate_single_spatial_correlation_matrix(distanceMatrix, IMT, correlationType):
-
+def calculate_single_spatial_correlation_matrix(
+        distanceMatrix, IMT, correlationType):
     noLocations = len(distanceMatrix)
     correlationMatrix = np.zeros((noLocations, noLocations))
     b = calculate_spatial_length_scale(IMT, 'Vs30clustered')
@@ -27,34 +25,34 @@ def calculate_single_spatial_correlation_matrix(distanceMatrix, IMT, correlation
     for i in range(noLocations):
         for j in range(noLocations):
             if i == j:
-                correlationMatrix[i][j] = 1
+                correlationMatrix[i, j] = 1
             else:
                 if correlationType == 'no correlation':
-                    correlationMatrix[i][j] = 0
+                    correlationMatrix[i, j] = 0
                 if correlationType == 'full correlation':
-                    correlationMatrix[i][j] = 0.99999
+                    correlationMatrix[i, j] = 0.99999
                 if correlationType == 'spatial':
-                    correlationMatrix[i][j] = math.exp(
-                        -3 * distanceMatrix[i][j] / b)
+                    correlationMatrix[i, j] = math.exp(
+                        -3 * distanceMatrix[i, j] / b)
 
     return correlationMatrix
 
 
-def calculate_spatial_correlation_matrices(distanceMatrix, IMTs, correlationType):
-
-    noLocations = len(distanceMatrix)
+def calculate_spatial_correlation_matrices(
+        distanceMatrix, IMTs, correlationType):
     noIMTs = len(IMTs)
     spatialCorrMatrices = []
 
     for i in range(noIMTs):
-        spatialCorrMatrices.append(calculate_single_spatial_correlation_matrix(
-            distanceMatrix, IMTs[i], correlationType))
+        spatialCorrMatrices.append(
+            calculate_single_spatial_correlation_matrix(
+                distanceMatrix, IMTs[i], correlationType))
 
     return np.array(spatialCorrMatrices)
 
 
-def calculate_spatial_covariance_matrices(closestGroundShaking, spatialCorrMatrices):
-
+def calculate_spatial_covariance_matrices(groundShaking, spatialCorrMatrices):
+    # this depends on sPGA, sSa03, sSa10, sSa30
     noIMT = len(spatialCorrMatrices)
     noLocations = len(spatialCorrMatrices[0])
     spatialCovMatrices = []
@@ -62,16 +60,15 @@ def calculate_spatial_covariance_matrices(closestGroundShaking, spatialCorrMatri
         tempCovMatrix = np.zeros((noLocations, noLocations))
         for j in range(noLocations):
             for k in range(noLocations):
-                tempCovMatrix[j][k] = spatialCorrMatrices[i][j][k] * \
-                    closestGroundShaking[j][2 + noIMT + i] * \
-                    closestGroundShaking[k][2 + noIMT + i]
+                tempCovMatrix[j, k] = spatialCorrMatrices[i, j, k] * \
+                    groundShaking[j, 2 + noIMT + i] * \
+                    groundShaking[k, 2 + noIMT + i]
         spatialCovMatrices.append(tempCovMatrix)
 
     return np.array(spatialCovMatrices)
 
 
 def calculate_cross_correlation_matrix(listIMT, correlationType):
-
     noIMT = len(listIMT)
     crossCorrMatrix = np.zeros((noIMT, noIMT))
 
@@ -88,7 +85,7 @@ def calculate_cross_correlation_matrix(listIMT, correlationType):
                 T2 = float(listIMT[j].replace("SA(", "").replace(")", ""))
 
             if i == j:
-                crossCorrMatrix[i][j] = 1
+                crossCorrMatrix[i, j] = 1
             else:
 
                 Tmax = max([T1, T2])
@@ -100,18 +97,22 @@ def calculate_cross_correlation_matrix(listIMT, correlationType):
                     II = 0
 
                 if correlationType == 'no correlation':
-                    crossCorrMatrix[i][j] = 0
+                    crossCorrMatrix[i, j] = 0
                 if correlationType == 'full correlation':
-                    crossCorrMatrix[i][j] = 0.99999
+                    crossCorrMatrix[i, j] = 0.99999
                 if correlationType == 'cross':
-                    crossCorrMatrix[i][j] = 1 - math.cos((math.pi / 2) - (
-                        0.359 + 0.163 * II * math.log(Tmin / 0.189)) * math.log(Tmax / Tmin))
+                    crossCorrMatrix[i, j] = 1 - math.cos((math.pi / 2) - (
+                        0.359 + 0.163 * II * math.log(Tmin / 0.189)
+                    ) * math.log(Tmax / Tmin))
 
     return crossCorrMatrix
 
 
-def generate_random_fields_ground_motion(IMTs, groundShaking, spatialCovMatrices, crossCorrMatrix, siteEffects, noSigmas, noGMFs):
-
+def generate_random_fields_ground_motion(
+        IMTs, groundShaking, spatialCovMatrices, crossCorrMatrix,
+        siteEffects, noSigmas, noGMFs):
+    # groundShaking has shape (N, 11) where
+    # 11 = lon lat mPGA mSa03 mSa10 mSa30 sPGA sSa03 sSa10 sSa30 Vs30
     noLocations = spatialCovMatrices.shape[1]
     noIMT = crossCorrMatrix.shape[0]
     L = []
@@ -126,13 +127,14 @@ def generate_random_fields_ground_motion(IMTs, groundShaking, spatialCovMatrices
     for i in range(noIMT):
         LLTrow = []
         for j in range(noIMT):
-            LLTrow.append(np.dot(L[i], np.transpose(L[j]))
-                          * crossCorrMatrix[i][j])
+            LLTrow.append(
+                np.dot(L[i], np.transpose(L[j])) * crossCorrMatrix[i, j])
         for irow in range(len(LLTrow[0])):
             singleLLTrow = np.zeros((int(len(LLTrow) * len(LLTrow[0]))))
             for iL in range(len(LLTrow)):
-                singleLLTrow[iL * len(LLTrow[0]):(iL + 1)
-                             * len(LLTrow[0])] = LLTrow[iL][irow]
+                singleLLTrow[
+                    iL * len(LLTrow[0]):(iL + 1) * len(LLTrow[0])
+                ] = LLTrow[iL][irow]
             LLT.append(singleLLTrow)
     LLT = np.array(LLT)
 
@@ -147,14 +149,13 @@ def generate_random_fields_ground_motion(IMTs, groundShaking, spatialCovMatrices
 
     gmfs = np.exp(np.dot(L, Z) + mu)
 
-    if siteEffects:
+    if siteEffects:  # use vs30 which is the last field
         gmfs = amplifyGMFs(IMTs, groundShaking[:, -1], gmfs) * 0.8
 
     return gmfs
 
 
 def amplifyGMFs(IMTs, Vs30s, gmfs):
-
     noLocations = len(Vs30s)
 
     for i in range(4):
@@ -172,7 +173,6 @@ def amplifyGMFs(IMTs, Vs30s, gmfs):
 
 
 def calculate_spatial_length_scale(IMT, Vs30Case):
-
     if IMT == 'PGA':
         T = 0.0
     elif IMT[0:2] == 'SA':
@@ -190,7 +190,6 @@ def calculate_spatial_length_scale(IMT, Vs30Case):
 
 
 def calculate_distance_2points(point1, point2):
-
     lon1 = point1[0]
     lon2 = point2[0]
     lat1 = point1[1]
@@ -207,10 +206,18 @@ def calculate_distance_2points(point1, point2):
 
 
 def amplify_ground_shaking(T, Vs30, IMLs):
-    ampFactorsShort = [(760 / Vs30)**0.35, (760 / Vs30)**0.35, (760 / Vs30)**0.25,
-                       (760 / Vs30)**0.10, (760 / Vs30)**-0.05, (760 / Vs30)**-0.05]
-    ampFactorsMid = [(760 / Vs30)**0.65, (760 / Vs30)**0.65, (760 / Vs30)**0.60,
-                     (760 / Vs30)**0.53, (760 / Vs30)**0.45, (760 / Vs30)**0.45]
+    ampFactorsShort = [(760 / Vs30)**0.35,
+                       (760 / Vs30)**0.35,
+                       (760 / Vs30)**0.25,
+                       (760 / Vs30)**0.10,
+                       (760 / Vs30)**-0.05,
+                       (760 / Vs30)**-0.05]
+    ampFactorsMid = [(760 / Vs30)**0.65,
+                     (760 / Vs30)**0.65,
+                     (760 / Vs30)**0.60,
+                     (760 / Vs30)**0.53,
+                     (760 / Vs30)**0.45,
+                     (760 / Vs30)**0.45]
 
     if T <= 0.3:
         interpolator = interpolate.interp1d(

@@ -26,7 +26,6 @@ def save_online_data_to_xml(eventID):
     try:
         uncertaintyURL = 'http://shakemap.rm.ingv.it/shake/' + \
             str(eventID) + '/download/uncertainty.xml'
-        uncertaintyData = urlopen(uncertaintyURL)
         testfile = urllib.URLopener()
         testfile.retrieve(uncertaintyURL, "temp.zip")
         zip_ref = zipfile.ZipFile("temp.zip", 'r')
@@ -37,7 +36,6 @@ def save_online_data_to_xml(eventID):
     except:
         uncertaintyURL = 'http://shakemap.rm.ingv.it/shake/' + \
             str(eventID) + '/download/uncertainty.xml.zip'
-        uncertaintyData = urlopen(uncertaintyURL)
         testfile = urllib.URLopener()
         testfile.retrieve(uncertaintyURL, "temp.zip")
         zip_ref = zipfile.ZipFile("temp.zip", 'r')
@@ -47,7 +45,6 @@ def save_online_data_to_xml(eventID):
 
 
 def write_xml(data, filename):
-
     out_file = open(filename + '.xml', "w")
     for line in data:
         out_file.write(line)
@@ -55,7 +52,6 @@ def write_xml(data, filename):
 
 
 def cropShakingData(groundShakingData, typeCrop, limit):
-
     groundShakingData = numpy.array(groundShakingData)
 
     lon = groundShakingData[:, 0]
@@ -66,7 +62,8 @@ def cropShakingData(groundShakingData, typeCrop, limit):
 
         for iloc in range(len(lon) - 1, 0, -1):
             distance_x = math.fabs(
-                epicentre[0] - lon[iloc]) * 111 * math.cos(lat[iloc] * math.pi / 180)
+                epicentre[0] - lon[iloc]) * 111 * math.cos(
+                    lat[iloc] * math.pi / 180)
             distance_y = math.fabs(epicentre[1] - lat[iloc]) * 111
             distance = math.sqrt(distance_x**2 + distance_y**2)
             if distance > limit:
@@ -74,7 +71,8 @@ def cropShakingData(groundShakingData, typeCrop, limit):
 
     elif typeCrop == 'box':
         for iloc in range(len(lon) - 1, 0, -1):
-            if limit[0] > lon[iloc] or limit[1] < lon[iloc] or limit[2] > lat[iloc] or limit[3] < lat[iloc]:
+            if (limit[0] > lon[iloc] or limit[1] < lon[iloc] or
+                    limit[2] > lat[iloc] or limit[3] < lat[iloc]):
                 groundShakingData = numpy.delete(groundShakingData, iloc, 0)
 
     print('Total number of locations after cropping')
@@ -84,7 +82,6 @@ def cropShakingData(groundShakingData, typeCrop, limit):
 
 
 def reduceShakingData(groundShakingData, box, res):
-
     groundShakingData = numpy.array(groundShakingData)
     lon = numpy.linspace(box[0], box[1], (box[1] - box[0]) / res)
     print(lon)
@@ -108,16 +105,15 @@ def reduceShakingData(groundShakingData, box, res):
 
 
 def findClosestData(lon, lat, groundShakingData):
-
     dist = numpy.array(
-        ((groundShakingData[:, 0] - lon)**2 + (groundShakingData[:, 1] - lat)**2)**0.5)
+        ((groundShakingData[:, 0] - lon)**2 +
+         (groundShakingData[:, 1] - lat)**2)**0.5)
     idx = numpy.where(dist == dist.min())
 
     return groundShakingData[idx[0], 2:]
 
 
 def exportLocation(croppedShakingData):
-
     data = numpy.array(croppedShakingData)
     locations = data[:, 0:2]
 
@@ -125,7 +121,6 @@ def exportLocation(croppedShakingData):
 
 
 def parse_xml_data_ID(eventID):
-
     groundShakingFile = 'groundShaking' + str(eventID) + '.xml'
     uncertaintyFile = 'uncertainty' + str(eventID) + '.xml'
     data, IMTs = parse_xml_data_files(groundShakingFile, uncertaintyFile)
@@ -134,7 +129,6 @@ def parse_xml_data_ID(eventID):
 
 
 def parse_xml_data_files(groundShakingFile, uncertaintyFile):
-
     data = []
     file = open(groundShakingFile)
     lines1 = file.readlines()
@@ -166,28 +160,31 @@ def parse_xml_data_files(groundShakingFile, uncertaintyFile):
             lat = float(line1[1])
             if float(line1[2]) > 0:
                 sPGA = float(line2[2])
-                #sPGA = 0.62
+                # sPGA = 0.62
                 m = float(line1[2]) / 100
                 mPGA = math.log(
                     m**2 / math.sqrt((m**2 * (math.exp(sPGA**2) - 1)) + m**2))
                 if len(line1) > 9:
                     sSa03 = float(line2[5])
-                    #sSa03 = 0.69
+                    # sSa03 = 0.69
                     m = float(line1[5]) / 100
                     mSa03 = math.log(
-                        m**2 / math.sqrt((m**2 * (math.exp(sSa03**2) - 1)) + m**2))
+                        m**2 / math.sqrt((m**2 * (math.exp(sSa03**2) - 1))
+                                         + m**2))
 
                     sSa10 = float(line2[6])
-                    #sSa10 = 0.7
+                    # sSa10 = 0.7
                     m = float(line1[6]) / 100
                     mSa10 = math.log(
-                        m**2 / math.sqrt((m**2 * (math.exp(sSa10**2) - 1)) + m**2))
+                        m**2 / math.sqrt((m**2 * (math.exp(sSa10**2) - 1))
+                                         + m**2))
 
                     sSa30 = float(line2[7])
-                    #sSa30 = 0.69
+                    # sSa30 = 0.69
                     m = float(line1[7]) / 100
                     mSa30 = math.log(
-                        m**2 / math.sqrt((m**2 * (math.exp(sSa30**2) - 1)) + m**2))
+                        m**2 / math.sqrt((m**2 * (math.exp(sSa30**2) - 1))
+                                         + m**2))
 
                     Vs30 = float(line1[10])
                     data.append([lon, lat, mPGA, mSa03, mSa10,
@@ -294,7 +291,8 @@ def plotLocations(locations):
     box = define_bounding_box(locations[:, 0:2])
     plt.figure(3, figsize=(8, 6), dpi=80, facecolor='w', edgecolor='k')
     map = Basemap(llcrnrlon=box["lon_1"], llcrnrlat=box["lat_1"],
-                  urcrnrlon=box["lon_2"], urcrnrlat=box["lat_2"], projection='mill', resolution='i')
+                  urcrnrlon=box["lon_2"], urcrnrlat=box["lat_2"],
+                  projection='mill', resolution='i')
     x, y = map(locations[:, 0], locations[:, 1])
 
     map.drawcoastlines(linewidth=0.25)
