@@ -84,7 +84,6 @@ def cropShakingData(groundShakingData, typeCrop, limit):
 def reduceShakingData(groundShakingData, box, res):
     groundShakingData = numpy.array(groundShakingData)
     lon = numpy.linspace(box[0], box[1], (box[1] - box[0]) / res)
-    print(lon)
     lat = numpy.linspace(box[2], box[3], (box[3] - box[2]) / res)
     reducedGroundShaking = numpy.zeros(
         (int(len(lat) * len(lon)), len(groundShakingData[0])))
@@ -98,8 +97,8 @@ def reduceShakingData(groundShakingData, box, res):
                 lon[ilon], lat[ilat], groundShakingData)
             counter = counter + 1
 
-    print('Total number of locations after re-distribution')
-    print(len(reducedGroundShaking))
+    print('Total number of locations after re-distribution',
+          len(reducedGroundShaking))
 
     return reducedGroundShaking
 
@@ -194,8 +193,7 @@ def parse_xml_data_files(groundShakingFile, uncertaintyFile):
                     data.append([lon, lat, mPGA, sPGA, Vs30])
     file.close
 
-    print('Total number of locations with ground shaking:')
-    print(len(data))
+    print('Total number of locations with ground shaking:', len(data))
     print('The following IMTs were found:')
     print(IMTs)
 

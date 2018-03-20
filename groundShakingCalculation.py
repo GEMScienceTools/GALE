@@ -69,6 +69,7 @@ def calculate_spatial_covariance_matrices(groundShaking, spatialCorrMatrices):
 
 
 def calculate_cross_correlation_matrix(listIMT, correlationType):
+    # if there is only PGA this is a 1x1 identity matrix
     noIMT = len(listIMT)
     crossCorrMatrix = np.zeros((noIMT, noIMT))
 
@@ -110,7 +111,7 @@ def calculate_cross_correlation_matrix(listIMT, correlationType):
 
 def generate_random_fields_ground_motion(
         IMTs, groundShaking, spatialCovMatrices, crossCorrMatrix,
-        siteEffects, noSigmas, noGMFs):
+        siteEffects, noSigmas, noGMFs, seed=42):
     # groundShaking has shape (N, 11) where
     # 11 = lon lat mPGA mSa03 mSa10 mSa30 sPGA sSa03 sSa10 sSa30 Vs30
     noLocations = spatialCovMatrices.shape[1]
@@ -143,26 +144,26 @@ def generate_random_fields_ground_motion(
         for j in range(noLocations):
             mu.append(np.ones(noGMFs) * groundShaking[j][i + 2])
     mu = np.array(mu)
-    L = (np.linalg.cholesky(LLT))
+    L = np.linalg.cholesky(LLT)
     Z = truncnorm.rvs(-noSigmas, noSigmas, loc=0, scale=1,
-                      size=(noLocations * noIMT, noGMFs))
+                      size=(noLocations * noIMT, noGMFs),
+                      random_state=seed)
 
     gmfs = np.exp(np.dot(L, Z) + mu)
 
     if siteEffects:  # use vs30 which is the last field
-        gmfs = amplifyGMFs(IMTs, groundShaking[:, -1], gmfs) * 0.8
-
+        gmfs = amplify_gmfs(IMTs, groundShaking[:, -1], gmfs) * 0.8
     return gmfs
 
 
-def amplifyGMFs(IMTs, Vs30s, gmfs):
+def amplify_gmfs(IMTs, Vs30s, gmfs):
     noLocations = len(Vs30s)
 
     for i in range(4):
-        if IMTs[i] == 'PGA':
+        IMT = IMTs[i]
+        if IMT == 'PGA':
             T = 0.0
-        elif IMTs[0:2] == 'SA':
-            IMT = IMTs[i]
+        elif IMT[0:2] == 'SA':
             T = float(IMT.replace("SA(", "").replace(")", ""))
 
         for iloc in range(noLocations):
@@ -201,7 +202,7 @@ def calculate_distance_2points(point1, point2):
     a = math.sin(dlat / 2)**2 + math.cos(lat1) * \
         math.cos(lat2) * math.sin(dlon / 2)**2
 
-    distance = 6367 * 2 * math.asin(math.sqrt(a))
+    distance = 6371 * 2 * math.asin(math.sqrt(a))
     return distance
 
 
